@@ -136,6 +136,23 @@ for file in $fastqfiles
 		cd ..
 	done | tee -a ${outPATH}logfiles/log.txt
 
+if [ $prefix=="treatA_rep1_1mil" ] || [ $prefix=="treatA_rep2_1mil" ]
+then
+	awk -v NAME="$prefix" 'BEGIN { print "browser position chr12:5,289,521-5,291,937"
+	print "track type=bedGraph name=\""NAME"\" description=\""NAME"\" visibility=full windowingFunction=maximum color=0,0,125"}
+	{print $0}' ${prefix}_bedgraph > ${prefix}_header.bedgraph
+elif [ $prefix=="treatAB_rep1_1mil" ] || [ $prefix=="treatAB_rep1_1mil" ]
+then
+	awk -v NAME=$prefix 'BEGIN { print "browser position chr12:5,289,521-5,291,937"
+	print "track type=bedGraph name=\""NAME"\" description=\""NAME"\" visibility=full windowingFunction=maximum color=125,0,125"}
+	{print $0}' ${prefix}.bedgraph > ${prefix}_header.bedgraph
+elif [ $prefix=="Input1mil" ]
+then
+	awk -v NAME=$prefix 'BEGIN { print "browser position chr12:5,289,521-5,291,937"
+	print "track type=bedGraph name=\""NAME"\" description=\""NAME"\" visibility=full windowingFunction=maximum color=125,0,0"}
+	{print $0}' ${prefix}.bedgraph > ${prefix}_header.bedgraph
+fi
+
 
 
 #===============================================================================================
