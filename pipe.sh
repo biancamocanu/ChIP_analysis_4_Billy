@@ -181,7 +181,10 @@ for file in $fastqfiles
                         { print $0}' ${prefix}_summits.bed > ${PREFIX}_summits_header.bed
 
 			echo "Finding high confidence peaks between replicates"
-			${sample}=`echo $prefix | cut -d "_" -f1,2`
+			sample=`echo $prefix | cut -d "_" -f1,2`
+			if [ -s ${sample}_rep1_peaks_shifted.bed ] && [ -s ${sample}_rep2_peaks_shifted.bed]
+			then
+			bedtools intersect -a ${sample}_rep1_peaks_shifted.bed -b ${sample}_rep2_peaks_shifted.bed > ${sample}_peaks_highconf.bed
 
 	fi
 	done | tee -a ${outPATH}logfiles/log.txt
