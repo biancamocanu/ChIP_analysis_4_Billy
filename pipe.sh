@@ -157,8 +157,14 @@ for file in $fastqfiles
 		cd ..
 
 		echo "Calling peaks for Chromosome 12 using MACS"
+		if [ -s ${outPATH}peaks ]
+		then
+		cd peaks
+		else
 		mkdir peaks
 		cd peaks
+		fi
+
 		if [ $prefix != "Input" ]
 		then
 			macs14 -t ${outPATH}${prefix}/${prefix}_chr12.sorted.bam -c ${outPATH}Input/Input_chr12.sorted.bam -f BAM -n ${prefix} -g 133851895
@@ -166,24 +172,26 @@ for file in $fastqfiles
 			peakshift=`grep "legend" ${prefix}_model.r | tail -n 1 | cut -d "=" -f2 | cut -d "\"" -f1`
 
 			top_peak=`sort -k5nr ${prefix}_summits.bed | head -1 | cut -f2`
+			browser_start=$(($top_peak - 300))
+			browser_end=$(($top_peak + 300))
 
 			echo "Shifting peaks by $peakshift"
-			awk -v d=$peakshift 'BEGIN {printf ("%s\t%s\t%s\t%s\t%s\n", $1, $2+d, $3-d, $4, $5)}' ${prefix}_peaks.bed > ${prefix}_peaks_shifted.bed
+			awk -v d=$peakshift '{printf ("%s\t%s\t%s\t%s\t%s\n", $1, $2 + (d/2), $3 - (d/2), $4, $5)}' ${prefix}_peaks.bed > ${prefix}_peaks_shifted.bed
 
 			echo "Generating UCSC BED files with headers for peaks and summits"
 
-			awk -v NAME=${prefix}_peaks -v top_peak=$top_peak 'BEGIN { print "browser position chr12:("top_peak"-300)-("top_peak"+300)"
+			awk -v NAME=${prefix}_peaks -v browser_start=$browser_start -v browser_end=$browser_end 'BEGIN { print "browser position chr12:("browser_start")-("browser_end")"
 			print "track type=bed name=\""NAME"\" description=\""NAME"\" visibility=squish autoScale=on colorByStrand=\"255,0,0 0,0,255\""}
-			{ print $0}' ${prefix}_peaks.bed > ${PREFIX}_peaks_header.bed
+			{ print $0}' ${prefix}_peaks_shifted.bed > ${prefix}_peaks_shifted_header.bed
 
-			awk -v NAME=${prefix}_summits -v top_peak=$top_peak 'BEGIN { print "browser position chr12:("top_peak"-300)-("top_peak"+300)"
+			awk -v NAME=${prefix}_summits -v browser_start=$browser_start -v browser_end=$browser_end 'BEGIN { print "browser position chr12:("browser_start")-("browser_end")"
                         print "track type=bed name=\""NAME"\" description=\""NAME"\" visibility=squish autoScale=on colorByStrand=\"255,0,0 0,0,255\""}
-                        { print $0}' ${prefix}_summits.bed > ${PREFIX}_summits_header.bed
+                        { print $0}' ${prefix}_summits.bed > ${prefix}_summits_header.bed
 
-			echo "Finding high confidence peaks between replicates"
 			sample=`echo $prefix | cut -d "_" -f1,2`
-			if [ -s ${sample}_rep1_peaks_shifted.bed ] && [ -s ${sample}_rep2_peaks_shifted.bed]
+			if [ -s ${sample}_rep1_peaks_shifted.bed ] && [ -s ${sample}_rep2_peaks_shifted.bed ]
 			then
+			echo "Finding high confidence peaks between replicates"
 			bedtools intersect -a ${sample}_rep1_peaks_shifted.bed -b ${sample}_rep2_peaks_shifted.bed > ${sample}_peaks_highconf.bed
 			fi
 		fi
