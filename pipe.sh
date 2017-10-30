@@ -168,15 +168,15 @@ for file in $fastqfiles
 			top_peak=`sort -k5nr ${prefix}_summits.bed | head -1 | cut -f2`
 
 			echo "Shifting peaks by $peakshift"
-			awk -v d=$peakshift 'printf ("%s\t%s\t%s\t%s\t%s\n", $1, $2, (($2+$3)/2)+"d", $4, $5)}' ${prefix}_peaks.bed > ${prefix}_peaks_shifted.bed
+			awk -v d=$peakshift 'BEGIN {printf ("%s\t%s\t%s\t%s\t%s\n", $1, $2+d, $3-d, $4, $5)}' ${prefix}_peaks.bed > ${prefix}_peaks_shifted.bed
 
 			echo "Generating UCSC BED files with headers for peaks and summits"
 
-			awk -v NAME=${prefix}_peaks top_peak=$top_peak 'BEGIN { print "browser position chr12:("top_peak"-300)-("top_peak"+300)"
+			awk -v NAME=${prefix}_peaks -v top_peak=$top_peak 'BEGIN { print "browser position chr12:("top_peak"-300)-("top_peak"+300)"
 			print "track type=bed name=\""NAME"\" description=\""NAME"\" visibility=squish autoScale=on colorByStrand=\"255,0,0 0,0,255\""}
 			{ print $0}' ${prefix}_peaks.bed > ${PREFIX}_peaks_header.bed
 
-			awk -v NAME=${prefix}_summits top_peak=$top_peak 'BEGIN { print "browser position chr12:("top_peak"-300)-("top_peak"+300)"
+			awk -v NAME=${prefix}_summits -v top_peak=$top_peak 'BEGIN { print "browser position chr12:("top_peak"-300)-("top_peak"+300)"
                         print "track type=bed name=\""NAME"\" description=\""NAME"\" visibility=squish autoScale=on colorByStrand=\"255,0,0 0,0,255\""}
                         { print $0}' ${prefix}_summits.bed > ${PREFIX}_summits_header.bed
 
@@ -185,8 +185,8 @@ for file in $fastqfiles
 			if [ -s ${sample}_rep1_peaks_shifted.bed ] && [ -s ${sample}_rep2_peaks_shifted.bed]
 			then
 			bedtools intersect -a ${sample}_rep1_peaks_shifted.bed -b ${sample}_rep2_peaks_shifted.bed > ${sample}_peaks_highconf.bed
-
-	fi
+			fi
+		fi
 	done | tee -a ${outPATH}logfiles/log.txt
 
 
