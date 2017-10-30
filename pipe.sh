@@ -151,8 +151,9 @@ for file in $fastqfiles
 #		echo "Genome Browser bedgraphs generated!"
 
 #=============================================================================================================================================================
-# This part is for calling peaks using MACS. This will call peaks only for Chromosome 12. For MEME and FIMO usage, one should use the top summits from the
-# entire set of chromosomes (w/ file provided on the server)
+# This part is for calling peaks using MACS. After peak calling, it shifts the peaks by half the "d" value that the pdf reports and creates files for genome
+# browser use by adding the BED headers. The genome browser will display a region 300 nts upstream and downstream of the top peak found in chromosome 12.
+#For MEME and FIMO usage, one should use the top summits from the entire set of chromosomes (w/ file provided on the server)
 #=============================================================================================================================================================
 		cd ..
 
@@ -187,6 +188,12 @@ for file in $fastqfiles
 			awk -v NAME=${prefix}_summits -v browser_start=$browser_start -v browser_end=$browser_end 'BEGIN { print "browser position chr12:("browser_start")-("browser_end")"
                         print "track type=bed name=\""NAME"\" description=\""NAME"\" visibility=squish autoScale=on colorByStrand=\"255,0,0 0,0,255\""}
                         { print $0}' ${prefix}_summits.bed > ${prefix}_summits_header.bed
+
+#==============================================================================================================================================================
+# This part intersects the datasets to report:
+# 1. High confidence peaks between replicates
+# 2. Peaks specific only to treatment A or only to treatment A+B
+#==============================================================================================================================================================
 
 			sample=`echo $prefix | cut -d "_" -f1,2`
 			if [ -s ${sample}_rep1_peaks_shifted.bed ] && [ -s ${sample}_rep2_peaks_shifted.bed ]
