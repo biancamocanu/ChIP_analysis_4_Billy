@@ -200,6 +200,16 @@ for file in $fastqfiles
 			then
 			echo "Finding high confidence peaks between replicates"
 			bedtools intersect -a ${sample}_rep1_peaks_shifted.bed -b ${sample}_rep2_peaks_shifted.bed > ${sample}_peaks_highconf.bed
+
+# the next statement is a bit iffy because it needs the other sample high confidence peaks bed file, and it depends on the order the files are processed; should work though
+
+				if [ $sample=="treatA_chip" ] && [ -s treatAB_chip_peaks_highconf.bed ]
+				then
+				bedtools intersect -v -a ${sample}_peaks_highconf.bed -b treatAB_chip_peaks_highconf.bed > ${sample}_only_peaks.bed
+				elif [ $sample=="treatAB_chip"] && [ -s treatA_chip_peaks_highconf.bed ]
+				then
+				bedtools intersect -v -a ${sample}_peaks_highconf.bed -b treatA_chip_peaks_highconf.bed > ${sample}_only_peaks.bed
+				fi
 			fi
 		fi
 	done | tee -a ${outPATH}logfiles/log.txt
