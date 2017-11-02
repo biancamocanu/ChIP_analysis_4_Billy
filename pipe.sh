@@ -32,7 +32,7 @@ module load samtools/1.3.1/
 module load BedTools/2.26.0/
 
 #===================================================================================================================================================
-# Global variables 
+# Global variables
 
 inPATH="/tempdata3/MCB5430/midterm/midterm/fastq/" # uncomment this for the real (very large) files
 # inPATH="/home/bim16102/midterm/" #used this on 1 mil reads files to test the script
@@ -45,6 +45,7 @@ TSSbackground="/tempdata3/MCB5430/midterm/hg19_unique_TSSonly_bkgrnd.txt"
 outPATH="/home/bim16102/midterm/processed_data/"
 jaspar_meme="/tempdata3/MCB5430/TF_db/jaspar.meme"
 adapter="GATCGGAAGAGCTCGTATGCCGTCTTCTGCTTGAAA"
+summits_highconf=$(find /tempdata3/MCB5430/midterm/midterm/peaks/ -maxdepth 1 -type f)
 fastqfiles=$(find ${inPATH} -maxdepth 1 -type f)
 #===================================================================================================================================================
 
@@ -61,7 +62,7 @@ fastqfiles=$(find ${inPATH} -maxdepth 1 -type f)
 #		mkdir ${outPATH}logfiles
 #		touch ${outPATH}logfiles/log.txt
 #		echo "New directory created: ${outPATH}" | tee -a ${outPATH}logfiles/log.txt
-#fi |
+#fi
 
 
 #echo -e "Files to be proceesed: $fastqfiles" | tee -a ${outPATH}logfiles/log.txt
@@ -214,48 +215,73 @@ fastqfiles=$(find ${inPATH} -maxdepth 1 -type f)
 #		fi
 #	done | tee -a ${outPATH}logfiles/log.txt
 cd $outPATH
-echo "Generating gene lists"
-mkdir geneLists
+#echo "Generating gene lists"
+#mkdir geneLists
 cd geneLists
 #==============================================================================================================================================================
 # This part processes the hg19_gencode_ENSG_geneID.bed file to retrieve the TSS, promoters, genes and intergenic regions for chromosome 12
 #==============================================================================================================================================================
 # Retrieving only chromosome 12 entries:
-echo "Retrieving chr12 entries"
-cat $gencode | grep "chr12" > ./gencode_ENSG_geneID_chr12.txt
+#echo "Retrieving chr12 entries"
+#cat $gencode | grep "chr12" > ./gencode_ENSG_geneID_chr12.txt
 
 # Retrieving TSS - if the gene is on the + strand, start of gene is $2 => subtract 500 from $2 (start of TSS) and add 500 to $2 (end of TSS)
 # If the gene is on the - strand, the start of the gene is $3 => add 500 to $3 (start of TSS) and subtract 500 to $3 (end of TSS)
 # In these BED files, the smaller coordinate is always in col. 2, regardless of the strand
-echo "Creating TSS only file"
-awk '{if($6=="+" && $2<$3)
-printf ("%s\t%s\t%s\t%s\t%s\t%s\n", $1, $2 - 500, $2 + 500, $4, $5, $6);
-else if($6=="-" && $2<$3)
-printf ("%s\t%s\t%s\t%s\t%s\t%s\n", $1, $3 - 500, $3 + 500, $4, $5, $6)
-}' gencode_ENSG_geneID_chr12.txt > gencode_ENSG_geneID_chr12_TSS.bed
+#echo "Creating TSS only file"
+#awk '{if($6=="+" && $2<$3)
+#printf ("%s\t%s\t%s\t%s\t%s\t%s\n", $1, $2 - 500, $2 + 500, $4, $5, $6);
+#else if($6=="-" && $2<$3)
+#printf ("%s\t%s\t%s\t%s\t%s\t%s\n", $1, $3 - 500, $3 + 500, $4, $5, $6)
+#}' gencode_ENSG_geneID_chr12.txt > gencode_ENSG_geneID_chr12_TSS.bed
 
 # Retrieving genes - if the gene is on the + strand, gene region starts at $2 + 501 and ends at the $3 + 1000
 # if the gene is on the - strand, the gene ends at $2 - 1000, starts at $3 - 501
 # In these BED files, the smaller coordinate is always in col. 2 regardless of the strand
-echo "Creating genes only file"
-awk '{if($6=="+" && $2<$3)
-printf ("%s\t%s\t%s\t%s\t%s\t%s\n", $1, $2 + 501, $3 + 1000, $4, $5, $6);
-else if($6=="-" && $2<$3)
-printf ("%s\t%s\t%s\t%s\t%s\t%s\n", $1, $2 - 1000, $3 - 501, $4, $5, $6)
-}' gencode_ENSG_geneID_chr12.txt > gencode_ENSG_geneID_chr12_genes.bed
+#echo "Creating genes only file"
+#awk '{if($6=="+" && $2<$3)
+#printf ("%s\t%s\t%s\t%s\t%s\t%s\n", $1, $2 + 501, $3 + 1000, $4, $5, $6);
+#else if($6=="-" && $2<$3)
+#printf ("%s\t%s\t%s\t%s\t%s\t%s\n", $1, $2 - 1000, $3 - 501, $4, $5, $6)
+#}' gencode_ENSG_geneID_chr12.txt > gencode_ENSG_geneID_chr12_genes.bed
 
 # Intergenic regions - basically if it's not part of the first two - intersect with chromosome 12 file and take the complement
-echo "Creating IGS only file"
+#echo "Creating IGS only file"
 #creating a temporary file with both TSS and genes and creating the chromosome 12 only file size
-grep chr12 $hg19chromInfo > ./chr12Info.txt
+#grep chr12 $hg19chromInfo > ./chr12Info.txt
 
-cat ./gencode_ENSG_geneID_chr12_TSS.bed >> gencode_ENSG_geneID_chr12_genesandTSS.bed
-cat ./gencode_ENSG_geneID_chr12_genes.bed >> gencode_ENSG_geneID_chr12_genesandTSS.bed
+#cat ./gencode_ENSG_geneID_chr12_TSS.bed >> gencode_ENSG_geneID_chr12_genesandTSS.bed
+#cat ./gencode_ENSG_geneID_chr12_genes.bed >> gencode_ENSG_geneID_chr12_genesandTSS.bed
 
 # intersecting the file with chromosome 12
-bedtools sort -i gencode_ENSG_geneID_chr12_genesandTSS.bed > gencode_ENSG_geneID_chr12_genesandTSS.sorted.bed
-bedtools complement -i gencode_ENSG_geneID_chr12_genesandTSS.sorted.bed -g chr12Info.txt > gencode_ENSG_geneID_chr12_IGS.bed
-rm gencode_ENSG_geneID_chr12_genesandTSS.*
+#bedtools sort -i gencode_ENSG_geneID_chr12_genesandTSS.bed > gencode_ENSG_geneID_chr12_genesandTSS.sorted.bed
+#bedtools complement -i gencode_ENSG_geneID_chr12_genesandTSS.sorted.bed -g chr12Info.txt > gencode_ENSG_geneID_chr12_IGS.bed
+#rm gencode_ENSG_geneID_chr12_genesandTSS.*
+
+
+#==============================================================================================================================================================
+# This part analyzes the chromosome 12 summits from treatments A and A+B in order to see the distribution of the peaks that fall in the TSS, genes and IGS regions
+# The summits files are the ones provided on /tempdata3/MCB5430/midterm/midterm/peaks folder which are the from the entire genome
+#==============================================================================================================================================================
+
+#for file in $summits_highconf
+#	do
+#		ext=`echo $(basename $file) | cut -d "." -f 2` # generated to see file type
+#		prefix=`echo $(basename $file) | cut -d "." -f 1`  #creates a prefix for each bed file that is analyzed
+#		echo $prefix
+#		grep chr12 $file > ${prefix}_chr12.bed
+#
+#		if [ $ext=="bed" ]
+#		then
+#		bedtools coverage -a ${prefix}_chr12.bed -b gencode_ENSG_geneID_chr12_TSS.bed  > ${prefix}_chr12_inTSS.bed
+#		bedtools coverage -a ${prefix}_chr12.bed -b gencode_ENSG_geneID_chr12_IGS.bed > ${prefix}_chr12_inIGS.bed
+#		bedtools coverage -a ${prefix}_chr12.bed -b gencode_ENSG_geneID_chr12_genes.bed > ${prefix}_chr12_ingenes.bed
+#		fi
+#	done
+
+#==============================================================================================================================================================
+#
+#==============================================================================================================================================================
 
 #==============================================================================================================================================================
 # Unloading of required modules:
