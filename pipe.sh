@@ -40,8 +40,8 @@ hg19index="/tempdata3/MCB5430/genomes/hg19/bowtieIndex/hg19"
 hg19chromInfo="/tempdata3/MCB5430/genomes/hg19/hg19_chromInfo.txt"
 gencode="/tempdata3/MCB5430/annotations/hs/bed/hg19_gencode_ENSG_geneID.bed"
 chr12="/tempdata3/MCB5430/genomes/hg19/fasta/chr12.fasta"
-hg19="/tempdata3/MCB5430/genomes/hg19/fasta/hg19.fasta"
-TSSbackground="/tempdata3/MCB5430/midterm/hg19_unique_TSSonly_bkgrnd.txt"
+hg19="/tempdata3/MCB5430/genomes/hg19/fasta/hg19.fa"
+TSSbackground="/tempdata3/MCB5430/midterm/midterm/hg19_unique_TSSonly_bkgrnd.txt"
 outPATH="/home/bim16102/midterm/processed_data/"
 jaspar_meme="/tempdata3/MCB5430/TF_db/jaspar.meme"
 adapter="GATCGGAAGAGCTCGTATGCCGTCTTCTGCTTGAAA"
@@ -262,26 +262,73 @@ cd geneLists
 #==============================================================================================================================================================
 # This part analyzes the chromosome 12 summits from treatments A and A+B in order to see the distribution of the peaks that fall in the TSS, genes and IGS regions
 # The summits files are the ones provided on /tempdata3/MCB5430/midterm/midterm/peaks folder which are the from the entire genome
+# Also generates fasta files for MEME motif analysis and finds the MEME motifs
 #==============================================================================================================================================================
 
-#for file in $summits_highconf
-#	do
-#		ext=`echo $(basename $file) | cut -d "." -f 2` # generated to see file type
-#		prefix=`echo $(basename $file) | cut -d "." -f 1`  #creates a prefix for each bed file that is analyzed
-#		echo $prefix
-#		grep chr12 $file > ${prefix}_chr12.bed
-#
-#		if [ $ext=="bed" ]
-#		then
-#		bedtools coverage -a ${prefix}_chr12.bed -b gencode_ENSG_geneID_chr12_TSS.bed  > ${prefix}_chr12_inTSS.bed
-#		bedtools coverage -a ${prefix}_chr12.bed -b gencode_ENSG_geneID_chr12_IGS.bed > ${prefix}_chr12_inIGS.bed
-#		bedtools coverage -a ${prefix}_chr12.bed -b gencode_ENSG_geneID_chr12_genes.bed > ${prefix}_chr12_ingenes.bed
-#		fi
-#	done
+for file in $summits_highconf
+	do
+		ext=`echo $(basename $file) | cut -d "." -f 2` # generated to see file type
+		prefix=`echo $(basename $file) | cut -d "." -f 1`  #creates a prefix for each bed file that is analyzed
+
+		grep chr12 $file > ${prefix}_chr12.bed
+
+		if [ $ext=="bed" ]
+		then
+		bedtools coverage -a ${prefix}_chr12.bed -b gencode_ENSG_geneID_chr12_TSS.bed  > ${prefix}_chr12_inTSS.bed
+		bedtools coverage -a ${prefix}_chr12.bed -b gencode_ENSG_geneID_chr12_IGS.bed > ${prefix}_chr12_inIGS.bed
+		bedtools coverage -a ${prefix}_chr12.bed -b gencode_ENSG_geneID_chr12_genes.bed > ${prefix}_chr12_ingenes.bed
+
+		awk '{if($9!="0.0000000")
+		print $0}' ${prefix}_chr12_inTSS.bed > ${prefix}_chr12_inTSS_nozero.bed
+
+		awk '{if($9!="0.0000000")
+		print $0}' ${prefix}_chr12_ingenes.bed > ${prefix}_chr12_ingenes_nozero.bed
+
+		awk '{if($9!="0.0000000")
+		print $0}' ${prefix}_chr12_inIGS.bed > ${prefix}_chr12_inIGS_nozero.bed
+
+		fi
+
+		sort -k5nr $file | head -n 200 > ${prefix}_top200.bed
+		bedtools slop -i ${prefix}_top200.bed -g $hg19chromInfo -b 50 > ${prefix}_top200_100bp.bed
+		bedtools getfasta -name -fi $hg19 -bed ${prefix}_top200_100bp.bed -fo ${prefix}_top200_100bp.fasta
+
+		if [ ${prefix}=="treatA_summits" ]
+		then
+			meme ${prefix}_top200_100bp.fasta -oc ${prefix}_meme_OUT_FOLDER -bfile $TSSbackground -dna -nmotifs 2 -minw 10 -maxw 18 -revcomp -mod anr
+		else
+			meme ${prefix}_top200_100bp.fasta -oc ${prefix}_meme_OUT_FOLDER -bfile $TSSbackground -dna -nmotifs 2 -minw 12 -maxw 14 -revcomp -mod anr
 
 #==============================================================================================================================================================
-#
+# This part generates fasta sequences for the chromosome 12 TSS, genes and IGS and returns how many of each display the motifs identified with MEME
+# (this is done using MAST). It also scans the entire chromosome 12 for motif occurrences (regardless of them being in peaks or not, using FIMO)
 #==============================================================================================================================================================
+# The starting files are the three summits files with peaks in TSS, IGS and genes. They need to be expanded 50 bps each way and then converted to multi fasta
+
+bedtools slop -i ${prefix}_chr12_inIGS_nozero.bed -g chr12Info.txt -b 50 > ${prefix}_chr12_inIGS_100bp.bed
+bedtools slop -i ${prefix}_chr12_inTSS_nozero.bed -g chr12Info.txt -b 50 > ${prefix}_chr12_inTSS_100bp.bed
+bedtools slop -i ${prefix}_chr12_ingenes_nozero.bed -g chr12Info.txt -b 50 > ${prefix}_chr12_ingenes_100bp.bed
+
+bedtools getfasta -name -fi $hg19 -bed ${prefix}_chr12_inIGS_100bp.bed -fo ${prefix}_chr12_inIGS_100bp.fasta
+bedtools getfasta -name -fi $hg19 -bed ${prefix}_chr12_inTSS_100bp.bed -fo ${prefix}_chr12_inTSS_100bp.fasta
+bedtools getfasta -name -fi $hg19 -bed ${prefix}_chr12_ingenes_100bp.bed -fo ${prefix}_chr12_ingenes_100bp.fasta
+
+#MAST syntax for each file:
+
+mast ${prefix}_meme_OUT_FOLDER/MEME_output.txt ${prefix}_chr12_inIGS_100bp.fasta -oc ${prefix}_mast_OUT_FOLDER
+mast ${prefix}_meme_OUT_FOLDER/MEME_output.txt -hit_list ${prefix}_chr12_inIGS_100bp.fasta -oc ${prefix}_mast_OUT_FOLDER > ${prefix}_mast_hits.txt
+
+mast ${prefix}_meme_OUT_FOLDER/MEME_output.txt ${prefix}_chr12_inTSS_100bp.fasta- -oc ${prefix}_mast_OUT_FOLDER
+mast ${prefix}_meme_OUT_FOLDER/MEME_output.txt -hit_list ${prefix}_chr12_inTSS_100bp.fasta -oc ${prefix}_mast_OUT_FOLDER > ${prefix}_mast_hits.txt
+
+mast ${prefix}_meme_OUT_FOLDER/MEME_output.txt ${prefix}_chr12_ingenes_100bp.fasta -oc ${prefix}_mast_OUT_FOLDER
+mast ${prefix}_meme_OUT_FOLDER/MEME_output.txt -hit_list ${prefix}_chr12_ingenes_100bp.fasta -oc ${prefix}_mast_OUT_FOLDER > ${prefix}_mast_hits.txt
+
+#FIMO
+
+		fi
+	done
+
 
 #==============================================================================================================================================================
 # Unloading of required modules:
