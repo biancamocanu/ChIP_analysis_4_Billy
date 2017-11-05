@@ -73,82 +73,85 @@ for file in $fastqfiles
 		prefix=`echo $(basename $file) | cut -d "." -f 1`  #creates a prefix for each fastq file that is analyzed
 
 		if [ $ext=="fastq" ]
-		then
+			then
 
-		mkdir ${outPATH}${prefix}  #folder for the fastq file / sample
-		cd ${outPATH}$prefix
+			mkdir ${outPATH}${prefix}  #folder for the fastq file / sample
+			cd ${outPATH}$prefix
 
-		echo -e "Starting analysis on $(basename $file) ..."
-
-
-		echo "Generating QC reports of unprocessed $(basename $file)"
-		mkdir ./unprocessed_data_qc/
-		fastqc $file -o ./unprocessed_data_qc  2>&1
-
-		echo "Clipping adapter sequences..."
-		fastx_clipper -Q 33 -a $adapter -i $file -o ./${prefix}_clipped.fastq 2>&1
+			echo -e "Starting analysis on $(basename $file) ..."
 
 
-		echo "Trimming low quality bases..."
-		fastq_quality_trimmer -Q33 -t 32 -l 30 -i ./${prefix}_clipped.fastq -o ./${prefix}_preprocessed.fastq 2>&1
+			echo "Generating QC reports of unprocessed $(basename $file)"
+			mkdir ./unprocessed_data_qc/
+			fastqc $file -o ./unprocessed_data_qc  2>&1
 
-		echo "Generating QC reports of the preprocessed $(basename $file)..."
-		mkdir ./preprocessed_data_qc
-		fastqc ${prefix}_preprocessed.fastq -o ./preprocessed_data_qc/ 2>&1
+			echo "Clipping adapter sequences..."
+			fastx_clipper -Q 33 -a $adapter -i $file -o ./${prefix}_clipped.fastq 2>&1
 
-		echo "Aligning to Human genome (hg19) ..."
-		bowtie -S -v0 -m1 -t -q $hg19index ${prefix}_preprocessed.fastq ./${prefix}.sam 2>&1
-		cat ./${prefix}.sam | head -n 27  > ./${prefix}_chr12.sam # this appends the sam header to the chromosome 12 only sam file
 
-		echo "Subsetting the data to chromosome 12 aligned reads"
-		grep chr12 ./${prefix}.sam >> ./${prefix}_chr12.sam
-		echo "Alignment to human genome (hg19) complete for $(basename $file)!"
+			echo "Trimming low quality bases..."
+			fastq_quality_trimmer -Q33 -t 32 -l 30 -i ./${prefix}_clipped.fastq -o ./${prefix}_preprocessed.fastq 2>&1
 
-		echo "Generating BAM file..."
-		samtools view -S -b ${prefix}_chr12.sam > ${prefix}_chr12.bam  # sam to bam conversion
+			echo "Generating QC reports of the preprocessed $(basename $file)..."
+			mkdir ./preprocessed_data_qc
+			fastqc ${prefix}_preprocessed.fastq -o ./preprocessed_data_qc/ 2>&1
 
-		samtools sort -l 9 -n  ${prefix}_chr12.bam -T ${prefix} -o ${prefix}_chr12.sorted.bam  #this sorts the bam file so that it occupies less space
-		echo "BAM file generated!"
+			echo "Aligning to Human genome (hg19) ..."
+			bowtie -S -v0 -m1 -t -q $hg19index ${prefix}_preprocessed.fastq ./${prefix}.sam 2>&1
+			cat ./${prefix}.sam | head -n 27  > ./${prefix}_chr12.sam # this appends the sam header to the chromosome 12 only sam file
 
-		echo "Generating BED file..."
-		bedtools bamtobed -i ${prefix}_chr12.sorted.bam > ${prefix}_chr12.bed
-		echo "BED file generated!"
-		echo "Sorting BED file"
-		sortBed -i ${prefix}_chr12.bed > ${prefix}_chr12_sorted.bed
-		echo "Generating bedgraph file..."
-		bedtools genomecov -ibam ${prefix}_chr12.sorted.bam -bg > ${prefix}.bedgraph #generates the bedgraph from bam directly
-		echo "Bedgraph file generated!"
+			echo "Subsetting the data to chromosome 12 aligned reads"
+			grep chr12 ./${prefix}.sam >> ./${prefix}_chr12.sam
+			echo "Alignment to human genome (hg19) complete for $(basename $file)!"
+
+			echo "Generating BAM file..."
+			samtools view -S -b ${prefix}_chr12.sam > ${prefix}_chr12.bam  # sam to bam conversion
+
+			samtools sort -l 9 -n  ${prefix}_chr12.bam -T ${prefix} -o ${prefix}_chr12.sorted.bam  #this sorts the bam file so that it occupies less space
+			echo "BAM file generated!"
+
+			echo "Generating BED file..."
+			bedtools bamtobed -i ${prefix}_chr12.sorted.bam > ${prefix}_chr12.bed
+			echo "BED file generated!"
+			echo "Sorting BED file"
+			sortBed -i ${prefix}_chr12.bed > ${prefix}_chr12_sorted.bed
+			echo "Generating bedgraph file..."
+			bedtools genomecov -ibam ${prefix}_chr12.sorted.bam -bg > ${prefix}.bedgraph #generates the bedgraph from bam directly
+			echo "Bedgraph file generated!"
 
 #==============================================================================================================================================================
 # Comment this section if you want to keep all these files
 #==============================================================================================================================================================
-		echo "Cleaning up temporary files"
-		rm ${prefix}_clipped.fastq # partially processed file
-		rm ${prefix}_preprocessed.fastq # fully preprocessed fastq file - it occupies a lot of space
-		rm ${prefix}.sam # large file as well, virtually useless once converted to bam
-		rm ${prefix}_chr12.sam # subset of the file above, only for the assigned chromosome
-		rm ${prefix}_chr12.bam # unsorted bam file
-		rm ${prefix}_chr12.bed # unsorted bed file
-
+			echo "Cleaning up temporary files"
+			rm ${prefix}_clipped.fastq # partially processed file
+			rm ${prefix}_preprocessed.fastq # fully preprocessed fastq file - it occupies a lot of space
+			rm ${prefix}.sam # large file as well, virtually useless once converted to bam
+			rm ${prefix}_chr12.sam # subset of the file above, only for the assigned chromosome
+			rm ${prefix}_chr12.bam # unsorted bam file
+			rm ${prefix}_chr12.bed # unsorted bed file
+		
+		fi
 #==============================================================================================================================================================
 
 		echo "Preparing bedgraphs for Genome Browser..."
+		
 		if [ $prefix=="treatA_chip_rep1" ] || [ $prefix=="treatA_chip_rep2" ]
-		then
+			then
 			awk -v NAME="$prefix" 'BEGIN { print "browser position chr12:5,289,521-5,291,937"
 			print "track type=bedGraph name=\""NAME"\" description=\""NAME"\" visibility=full windowingFunction=maximum color=0,0,125"}
 			{print $0}' ${prefix}.bedgraph > ${prefix}_header.bedgraph
 		elif [ $prefix=="treatAB_chip_rep1" ] || [ $prefix=="treatAB_chip_rep2" ]
-		then
+			then
 			awk -v NAME=$prefix 'BEGIN { print "browser position chr12:5,289,521-5,291,937"
 			print "track type=bedGraph name=\""NAME"\" description=\""NAME"\" visibility=full windowingFunction=maximum color=125,0,125"}
 			{print $0}' ${prefix}.bedgraph > ${prefix}_header.bedgraph
 		elif [ $prefix=="Input" ]
-		then
+			then
 			awk -v NAME=$prefix 'BEGIN { print "browser position chr12:5,289,521-5,291,937"
 			print "track type=bedGraph name=\""NAME"\" description=\""NAME"\" visibility=full windowingFunction=maximum color=125,0,0"}
 			{print $0}' ${prefix}.bedgraph > ${prefix}_header.bedgraph
 		fi
+		
 		echo "Genome Browser bedgraphs generated!"
 
 #=============================================================================================================================================================
@@ -157,18 +160,18 @@ for file in $fastqfiles
 #For MEME and FIMO usage, one should use the top summits from the entire set of chromosomes (w/ file provided on the server)
 #=============================================================================================================================================================
 		cd ..
-
 		echo "Calling peaks for Chromosome 12 using MACS"
-		if [ -s ${outPATH}peaks ]
-		then
-		cd peaks
-		else
-		mkdir peaks
-		cd peaks
-		fi
+		
+			if [ -s ${outPATH}peaks ]
+				then
+				cd peaks
+			else
+				mkdir peaks
+				cd peaks
+			fi
 
 		if [ $prefix != "Input" ]
-		then
+			then
 			macs14 -t ${outPATH}${prefix}/${prefix}_chr12.sorted.bam -c ${outPATH}Input/Input_chr12.sorted.bam -f BAM -n ${prefix} -g 133851895
 			Rscript ${prefix}_model.r
 			peakshift=`grep "legend" ${prefix}_model.r | tail -n 1 | cut -d "=" -f2 | cut -d "\"" -f1`
@@ -198,23 +201,25 @@ for file in $fastqfiles
 #==============================================================================================================================================================
 
 			sample=`echo $prefix | cut -d "_" -f1,2`
+			
 			if [ -s ${sample}_rep1_peaks_shifted.bed ] && [ -s ${sample}_rep2_peaks_shifted.bed ]
-			then
-			echo "Finding high confidence peaks between replicates"
-			bedtools intersect -a ${sample}_rep1_peaks_shifted.bed -b ${sample}_rep2_peaks_shifted.bed > ${sample}_peaks_highconf.bed
+				then
+				echo "Finding high confidence peaks between replicates"
+				bedtools intersect -a ${sample}_rep1_peaks_shifted.bed -b ${sample}_rep2_peaks_shifted.bed > ${sample}_peaks_highconf.bed
 
 # the next statement is a bit iffy because it needs the other sample high confidence peaks bed file, and it depends on the order the files are processed, but works
 
 				if [ $sample=="treatA_chip" ] && [ -s treatAB_chip_peaks_highconf.bed ]
-				then
-				bedtools intersect -v -a ${sample}_peaks_highconf.bed -b treatAB_chip_peaks_highconf.bed > ${sample}_only_peaks.bed
+					then
+					bedtools intersect -v -a ${sample}_peaks_highconf.bed -b treatAB_chip_peaks_highconf.bed > ${sample}_only_peaks.bed
 				elif [ $sample=="treatAB_chip"] && [ -s treatA_chip_peaks_highconf.bed ]
-				then
-				bedtools intersect -v -a ${sample}_peaks_highconf.bed -b treatA_chip_peaks_highconf.bed > ${sample}_only_peaks.bed
+					then
+					bedtools intersect -v -a ${sample}_peaks_highconf.bed -b treatA_chip_peaks_highconf.bed > ${sample}_only_peaks.bed
 				fi
 			fi
 		fi
 	done | tee -a ${outPATH}logfiles/log.txt
+
 cd $outPATH
 echo "Generating gene lists" | tee -a ${outPATH}logfiles/log_geneLists.txt
 mkdir geneLists
@@ -288,19 +293,19 @@ for file in $summits_highconf
 
 		echo "Examining distribution in TSS, IGS, genes..."
 		if [ $ext=="bed" ]
-		then
-		bedtools coverage -a ${prefix}_chr12.bed -b gencode_ENSG_geneID_chr12_TSS.bed  > ${prefix}_chr12_inTSS.bed
-		bedtools coverage -a ${prefix}_chr12.bed -b gencode_ENSG_geneID_chr12_IGS.bed > ${prefix}_chr12_inIGS.bed
-		bedtools coverage -a ${prefix}_chr12.bed -b gencode_ENSG_geneID_chr12_genes.bed > ${prefix}_chr12_ingenes.bed
+			then
+			bedtools coverage -a ${prefix}_chr12.bed -b gencode_ENSG_geneID_chr12_TSS.bed  > ${prefix}_chr12_inTSS.bed
+			bedtools coverage -a ${prefix}_chr12.bed -b gencode_ENSG_geneID_chr12_IGS.bed > ${prefix}_chr12_inIGS.bed
+			bedtools coverage -a ${prefix}_chr12.bed -b gencode_ENSG_geneID_chr12_genes.bed > ${prefix}_chr12_ingenes.bed
 
-		awk '{if($9!="0.0000000")
-		print $0}' ${prefix}_chr12_inTSS.bed > ${prefix}_chr12_inTSS_nozero.bed
+			awk '{if($9!="0.0000000")
+			print $0}' ${prefix}_chr12_inTSS.bed > ${prefix}_chr12_inTSS_nozero.bed
 
-		awk '{if($9!="0.0000000")
-		print $0}' ${prefix}_chr12_ingenes.bed > ${prefix}_chr12_ingenes_nozero.bed
+			awk '{if($9!="0.0000000")
+			print $0}' ${prefix}_chr12_ingenes.bed > ${prefix}_chr12_ingenes_nozero.bed
 
-		awk '{if($9!="0.0000000")
-		print $0}' ${prefix}_chr12_inIGS.bed > ${prefix}_chr12_inIGS_nozero.bed
+			awk '{if($9!="0.0000000")
+			print $0}' ${prefix}_chr12_inIGS.bed > ${prefix}_chr12_inIGS_nozero.bed
 
 		fi
 
@@ -310,10 +315,11 @@ for file in $summits_highconf
 		bedtools getfasta -name -fi $hg19 -bed ${prefix}_top200_100bp.bed -fo ${prefix}_top200_100bp.fasta
 
 		echo "Finding motifs with MEME for $prefix"
+		
 		if [ ${prefix}=="treatA_summits" ]
-		then
+			then
 			meme ${prefix}_top200_100bp.fasta -oc ${prefix}_meme_OUT_FOLDER -bfile $TSSbackground -dna -nmotifs 2 -minw 10 -maxw 18 -revcomp -mod anr
-		else
+			else
 			meme ${prefix}_top200_100bp.fasta -oc ${prefix}_meme_OUT_FOLDER -bfile $TSSbackground -dna -nmotifs 2 -minw 12 -maxw 14 -revcomp -mod anr
 		fi
 #==============================================================================================================================================================
