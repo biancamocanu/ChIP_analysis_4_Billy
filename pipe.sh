@@ -208,7 +208,7 @@ for file in $fastqfiles
 #==============================================================================================================================================================
 
 				sample=`echo $prefix | cut -d "_" -f1,2`
-			
+
 				if [ -s ${sample}_rep1_peaks_shifted.bed ] && [ -s ${sample}_rep2_peaks_shifted.bed ]
 				then
 					echo "Finding high confidence peaks between replicates"
@@ -225,12 +225,9 @@ for file in $fastqfiles
 					fi
 				fi
 		fi
-	
-	
+
 	done | tee -a ${outPATH}logfiles/log.txt
-	
-	
-	
+
 cd $outPATH
 
 echo "Generating gene lists" | tee -a ${outPATH}logfiles/log_geneLists.txt
@@ -327,7 +324,7 @@ for file in $summits_highconf
 		bedtools getfasta -name -fi $hg19 -bed ${prefix}_top200_100bp.bed -fo ${prefix}_top200_100bp.fasta
 
 		echo "Finding motifs with MEME for $prefix"
-		
+
 		if [ ${prefix}=="treatA_summits" ]
 			then
 			meme ${prefix}_top200_100bp.fasta -oc ${prefix}_meme_OUT_FOLDER -bfile $TSSbackground -dna -nmotifs 2 -minw 10 -maxw 18 -revcomp -mod anr
