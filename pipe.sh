@@ -50,13 +50,13 @@ fastqfiles=$(find ${inPATH} -maxdepth 1 -type f)
 #===================================================================================================================================================
 
 if [ -s $outPATH ]
-	then
+then
 		cd ${outPATH}
 		mkdir ${outPATH}logfiles
 		touch ${outPATH}logfiles/log.txt
 		echo "$outPATH directory already exists" | tee -a ${outPATH}logfiles/log.txt
 
-	else
+else
 		mkdir ${outPATH}
 		cd ${outPATH}
 		mkdir ${outPATH}logfiles
@@ -73,7 +73,7 @@ for file in $fastqfiles
 		prefix=`echo $(basename $file) | cut -d "." -f 1`  #creates a prefix for each fastq file that is analyzed
 
 		if [ $ext=="fastq" ]
-			then
+		then
 
 			mkdir ${outPATH}${prefix}  #folder for the fastq file / sample
 			cd ${outPATH}$prefix
@@ -136,62 +136,69 @@ for file in $fastqfiles
 		echo "Preparing bedgraphs for Genome Browser..."
 		
 		if [ $prefix=="treatA_chip_rep1" ] || [ $prefix=="treatA_chip_rep2" ]
-			then
+		then
 			awk -v NAME="$prefix" 'BEGIN { print "browser position chr12:5,289,521-5,291,937"
 			print "track type=bedGraph name=\""NAME"\" description=\""NAME"\" visibility=full windowingFunction=maximum color=0,0,125"}
 			{print $0}' ${prefix}.bedgraph > ${prefix}_header.bedgraph
 		elif [ $prefix=="treatAB_chip_rep1" ] || [ $prefix=="treatAB_chip_rep2" ]
-			then
+		then
 			awk -v NAME=$prefix 'BEGIN { print "browser position chr12:5,289,521-5,291,937"
 			print "track type=bedGraph name=\""NAME"\" description=\""NAME"\" visibility=full windowingFunction=maximum color=125,0,125"}
 			{print $0}' ${prefix}.bedgraph > ${prefix}_header.bedgraph
 		elif [ $prefix=="Input" ]
-			then
+		then
 			awk -v NAME=$prefix 'BEGIN { print "browser position chr12:5,289,521-5,291,937"
 			print "track type=bedGraph name=\""NAME"\" description=\""NAME"\" visibility=full windowingFunction=maximum color=125,0,0"}
 			{print $0}' ${prefix}.bedgraph > ${prefix}_header.bedgraph
 		fi
 		
 		echo "Genome Browser bedgraphs generated!"
-
+		
+	done | tee -a ${outPATH}logfiles/log.txt
+	
+	
 #=============================================================================================================================================================
 # This part is for calling peaks using MACS. After peak calling, it shifts the peaks by half the "d" value that the pdf reports and creates files for genome
 # browser use by adding the BED headers. The genome browser will display a region 300 nts upstream and downstream of the top peak found in chromosome 12.
 #For MEME and FIMO usage, one should use the top summits from the entire set of chromosomes (w/ file provided on the server)
 #=============================================================================================================================================================
-		cd ..
-		echo "Calling peaks for Chromosome 12 using MACS"
+	echo "Calling peaks for Chromosome 12 using MACS"
+	
+	if [ -s ${outPATH}peaks ]
+	then
+		cd peaks
+	else
+		mkdir peaks
+		cd peaks
+	fi
+
+for file in $fastqfiles
+	do
+		ext=`echo $(basename $file) | cut -d "." -f 2` # generated to see file type
+		prefix=`echo $(basename $file) | cut -d "." -f 1`  #creates a prefix for each fastq file that is analyzed
 		
-			if [ -s ${outPATH}peaks ]
-				then
-				cd peaks
-			else
-				mkdir peaks
-				cd peaks
-			fi
-
 		if [ $prefix != "Input" ]
-			then
-			macs14 -t ${outPATH}${prefix}/${prefix}_chr12.sorted.bam -c ${outPATH}Input/Input_chr12.sorted.bam -f BAM -n ${prefix} -g 133851895
-			Rscript ${prefix}_model.r
-			peakshift=`grep "legend" ${prefix}_model.r | tail -n 1 | cut -d "=" -f2 | cut -d "\"" -f1`
+		then
+				macs14 -t ${outPATH}${prefix}/${prefix}_chr12.sorted.bam -c ${outPATH}Input/Input_chr12.sorted.bam -f BAM -n ${prefix} -g 133851895
+				Rscript ${prefix}_model.r
+				peakshift=`grep "legend" ${prefix}_model.r | tail -n 1 | cut -d "=" -f2 | cut -d "\"" -f1`
 
-			top_peak=`sort -k5nr ${prefix}_summits.bed | head -1 | cut -f2`
-			browser_start=$(($top_peak - 300))
-			browser_end=$(($top_peak + 300))
+				top_peak=`sort -k5nr ${prefix}_summits.bed | head -1 | cut -f2`
+				browser_start=$(($top_peak - 300))
+				browser_end=$(($top_peak + 300))
 
-			echo "Shifting peaks by $peakshift"
-			awk -v d=$peakshift '{printf ("%s\t%s\t%s\t%s\t%s\n", $1, $2 + (d/2), $3 - (d/2), $4, $5)}' ${prefix}_peaks.bed > ${prefix}_peaks_shifted.bed
+				echo "Shifting peaks by $peakshift"
+				awk -v d=$peakshift '{printf ("%s\t%s\t%s\t%s\t%s\n", $1, $2 + (d/2), $3 - (d/2), $4, $5)}' ${prefix}_peaks.bed > ${prefix}_peaks_shifted.bed
 
-			echo "Generating UCSC BED files with headers for peaks and summits"
+				echo "Generating UCSC BED files with headers for peaks and summits"
 
-			awk -v NAME=${prefix}_peaks -v browser_start=$browser_start -v browser_end=$browser_end 'BEGIN { print "browser position chr12:("browser_start")-("browser_end")"
-			print "track type=bed name=\""NAME"\" description=\""NAME"\" visibility=squish autoScale=on colorByStrand=\"255,0,0 0,0,255\""}
-			{ print $0}' ${prefix}_peaks_shifted.bed > ${prefix}_peaks_shifted_header.bed
+				awk -v NAME=${prefix}_peaks -v browser_start=$browser_start -v browser_end=$browser_end 'BEGIN { print "browser position chr12:("browser_start")-("browser_end")"
+				print "track type=bed name=\""NAME"\" description=\""NAME"\" visibility=squish autoScale=on colorByStrand=\"255,0,0 0,0,255\""}
+				{ print $0}' ${prefix}_peaks_shifted.bed > ${prefix}_peaks_shifted_header.bed
 
-			awk -v NAME=${prefix}_summits -v browser_start=$browser_start -v browser_end=$browser_end 'BEGIN { print "browser position chr12:("browser_start")-("browser_end")"
-                       print "track type=bed name=\""NAME"\" description=\""NAME"\" visibility=squish autoScale=on colorByStrand=\"255,0,0 0,0,255\""}
-                       { print $0}' ${prefix}_summits.bed > ${prefix}_summits_header.bed
+				awk -v NAME=${prefix}_summits -v browser_start=$browser_start -v browser_end=$browser_end 'BEGIN { print "browser position chr12:("browser_start")-("browser_end")"
+                print "track type=bed name=\""NAME"\" description=\""NAME"\" visibility=squish autoScale=on colorByStrand=\"255,0,0 0,0,255\""}
+                { print $0}' ${prefix}_summits.bed > ${prefix}_summits_header.bed
 
 
 #==============================================================================================================================================================
@@ -200,27 +207,32 @@ for file in $fastqfiles
 # 2. Peaks specific only to treatment A or only to treatment A+B
 #==============================================================================================================================================================
 
-			sample=`echo $prefix | cut -d "_" -f1,2`
+				sample=`echo $prefix | cut -d "_" -f1,2`
 			
-			if [ -s ${sample}_rep1_peaks_shifted.bed ] && [ -s ${sample}_rep2_peaks_shifted.bed ]
+				if [ -s ${sample}_rep1_peaks_shifted.bed ] && [ -s ${sample}_rep2_peaks_shifted.bed ]
 				then
-				echo "Finding high confidence peaks between replicates"
-				bedtools intersect -a ${sample}_rep1_peaks_shifted.bed -b ${sample}_rep2_peaks_shifted.bed > ${sample}_peaks_highconf.bed
+					echo "Finding high confidence peaks between replicates"
+					bedtools intersect -a ${sample}_rep1_peaks_shifted.bed -b ${sample}_rep2_peaks_shifted.bed > ${sample}_peaks_highconf.bed
 
 # the next statement is a bit iffy because it needs the other sample high confidence peaks bed file, and it depends on the order the files are processed, but works
 
-				if [ $sample=="treatA_chip" ] && [ -s treatAB_chip_peaks_highconf.bed ]
+					if [ $sample=="treatA_chip" ] && [ -s treatAB_chip_peaks_highconf.bed ]
 					then
-					bedtools intersect -v -a ${sample}_peaks_highconf.bed -b treatAB_chip_peaks_highconf.bed > ${sample}_only_peaks.bed
-				elif [ $sample=="treatAB_chip"] && [ -s treatA_chip_peaks_highconf.bed ]
+						bedtools intersect -v -a ${sample}_peaks_highconf.bed -b treatAB_chip_peaks_highconf.bed > ${sample}_only_peaks.bed
+					elif [ $sample=="treatAB_chip"] && [ -s treatA_chip_peaks_highconf.bed ]
 					then
-					bedtools intersect -v -a ${sample}_peaks_highconf.bed -b treatA_chip_peaks_highconf.bed > ${sample}_only_peaks.bed
+						bedtools intersect -v -a ${sample}_peaks_highconf.bed -b treatA_chip_peaks_highconf.bed > ${sample}_only_peaks.bed
+					fi
 				fi
-			fi
 		fi
+	
+	
 	done | tee -a ${outPATH}logfiles/log.txt
-
+	
+	
+	
 cd $outPATH
+
 echo "Generating gene lists" | tee -a ${outPATH}logfiles/log_geneLists.txt
 mkdir geneLists
 cd geneLists
@@ -341,11 +353,14 @@ for file in $summits_highconf
 
 #MAST syntax for each file:
 		echo "Searching for MEME motifs in chromosome 12 peaks"
-		mast ${prefix}_meme_OUT_FOLDER/meme.txt -hit_list ${prefix}_chr12_inIGS_100bp.fasta -oc ${prefix}_IGS_mast_OUT_FOLDER > ${prefix}_mast_hits.txt
+		mast ${prefix}_meme_OUT_FOLDER/meme.txt ${prefix}_chr12_inIGS_100bp.fasta -oc ${prefix}_IGS_mast_OUT_FOLDER
+		mast ${prefix}_meme_OUT_FOLDER/meme.txt -hit_list ${prefix}_chr12_inIGS_100bp.fasta -oc ${prefix}_IGS_mast_OUT_FOLDER > ${prefix}_IGS_mast_OUT_FOLDER/list_mast_hits.txt
 
-		mast ${prefix}_meme_OUT_FOLDER/meme.txt -hit_list ${prefix}_chr12_inTSS_100bp.fasta -oc ${prefix}_TSS_mast_OUT_FOLDER > ${prefix}_mast_hits.txt
+		mast ${prefix}_meme_OUT_FOLDER/meme.txt ${prefix}_chr12_inTSS_100bp.fasta -oc ${prefix}_TSS_mast_OUT_FOLDER
+		mast ${prefix}_meme_OUT_FOLDER/meme.txt -hit_list ${prefix}_chr12_inTSS_100bp.fasta -oc ${prefix}_TSS_mast_OUT_FOLDER > ${prefix}_TSS_mast_OUT_FOLDER/list_mast_hits.txt
 
-		mast ${prefix}_meme_OUT_FOLDER/meme.txt -hit_list ${prefix}_chr12_ingenes_100bp.fasta -oc ${prefix}_genes_mast_OUT_FOLDER > ${prefix}_mast_hits.txt
+		mast ${prefix}_meme_OUT_FOLDER/meme.txt ${prefix}_chr12_ingenes_100bp.fasta -oc ${prefix}_genes_mast_OUT_FOLDER
+		mast ${prefix}_meme_OUT_FOLDER/meme.txt -hit_list ${prefix}_chr12_ingenes_100bp.fasta -oc ${prefix}_genes_mast_OUT_FOLDER > ${prefix}_genes_mast_OUT_FOLDER/list_mast_hits.txt
 
 #FIMO
 
