@@ -1,0 +1,17 @@
+\BOOKMARK [1][-]{section.1}{ChIP-seq\040processing,\040alignment\040and\040display}{}% 1
+\BOOKMARK [2][-]{subsection.1.1}{Pipeline}{section.1}% 2
+\BOOKMARK [2][-]{subsection.1.2}{Summary\040table}{section.1}% 3
+\BOOKMARK [1][-]{section.2}{Peak\040calling\040and\040analysis}{}% 4
+\BOOKMARK [2][-]{subsection.2.1}{MACS}{section.2}% 5
+\BOOKMARK [2][-]{subsection.2.2}{High\040confidence\040peaks\040and\0402.3\040Peaks\040specific\040to\040each\040treatment}{section.2}% 6
+\BOOKMARK [1][-]{section.3}{Distribution\040of\040TF\040binding\040sites}{}% 7
+\BOOKMARK [2][-]{subsection.3.1}{Bed\040files\040with\040promoter,\040gene\040and\040intergenic\040sequences}{section.3}% 8
+\BOOKMARK [2][-]{subsection.3.2}{Determining\040the\040distribution\040of\040high\040confidence\040peaks\040\(summits\)\040that\040fall\040into\040promoter,\040genes\040and\040intergenic\040sequences}{section.3}% 9
+\BOOKMARK [2][-]{subsection.3.3}{Summary\040table\040for\040distribution\040in\040genomic\040regions}{section.3}% 10
+\BOOKMARK [2][-]{subsection.3.4}{TF\040preferences}{section.3}% 11
+\BOOKMARK [1][-]{section.4}{Identifying\040motifs\040under\040peaks}{}% 12
+\BOOKMARK [2][-]{subsection.4.1}{MEME}{section.4}% 13
+\BOOKMARK [2][-]{subsection.4.2}{MAST}{section.4}% 14
+\BOOKMARK [2][-]{subsection.4.3}{FIMO}{section.4}% 15
+\BOOKMARK [2][-]{subsection.4.4}{TomTom}{section.4}% 16
+\BOOKMARK [1][-]{section.5}{Final\040Question:\040What\040factor\040did\040Billy\040ChIP,\040and\040what\040were\040each\040of\040the\040treatments?}{}% 17
