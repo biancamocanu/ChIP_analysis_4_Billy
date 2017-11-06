@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.14159265-2.6-0.99996 (MiKTeX 2.9.6210 64-bit) (preloaded format=xelatex 2017.3.26)  6 NOV 2017 12:04
+This is XeTeX, Version 3.14159265-2.6-0.99996 (MiKTeX 2.9.6210 64-bit) (preloaded format=xelatex 2017.3.26)  6 NOV 2017 13:44
 entering extended mode
 **./mid.tex
 (mid.tex
@@ -668,7 +668,7 @@ Package Fancyhdr Warning: \headheight is too small (12.0pt):
 [1]
 File: MACS1.PNG Graphic file (type QTm)
  <use  "MACS1.PNG" >
-Overfull \hbox (34.3451pt too wide) in paragraph at lines 105--107
+Overfull \hbox (34.3451pt too wide) in paragraph at lines 107--109
 []
  []
 
@@ -681,23 +681,23 @@ Package Fancyhdr Warning: \headheight is too small (12.0pt):
 [2]
 File: MACS2.PNG Graphic file (type QTm)
  <use  "MACS2.PNG" >
-Overfull \hbox (32.8451pt too wide) in paragraph at lines 108--109
+Overfull \hbox (32.8451pt too wide) in paragraph at lines 110--111
 [] 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 108--109
+Underfull \hbox (badness 10000) in paragraph at lines 110--111
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 115--116
+Underfull \hbox (badness 10000) in paragraph at lines 117--118
 
  []
 
 File: geneLists1.PNG Graphic file (type QTm)
 <use  "geneLists1.PNG" >
-Overfull \hbox (33.5951pt too wide) in paragraph at lines 117--118
+Overfull \hbox (33.5951pt too wide) in paragraph at lines 119--120
 [] 
  []
 
@@ -708,7 +708,7 @@ Package Fancyhdr Warning: \headheight is too small (12.0pt):
  This may cause the page layout to be inconsistent, however.
 
 [3]
-Underfull \hbox (badness 10000) in paragraph at lines 120--121
+Underfull \hbox (badness 10000) in paragraph at lines 122--123
 
  []
 
@@ -721,13 +721,8 @@ Package Fancyhdr Warning: \headheight is too small (12.0pt):
 [4]
 File: Summits1.PNG Graphic file (type QTm)
  <use  "Summits1.PNG" >
-Overfull \hbox (33.5951pt too wide) in paragraph at lines 122--123
+Overfull \hbox (33.5951pt too wide) in paragraph at lines 124--125
 [] 
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 125--126
-
  []
 
 
@@ -746,12 +741,17 @@ Underfull \hbox (badness 10000) in paragraph at lines 131--132
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 135--138
+Underfull \hbox (badness 10000) in paragraph at lines 133--134
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 139--140
+Underfull \hbox (badness 10000) in paragraph at lines 137--140
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 141--142
 
  []
 
@@ -762,33 +762,33 @@ Package Fancyhdr Warning: \headheight is too small (12.0pt):
  This may cause the page layout to be inconsistent, however.
 
 [5]
-Underfull \hbox (badness 10000) in paragraph at lines 141--142
+Underfull \hbox (badness 10000) in paragraph at lines 143--144
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 143--145
+Underfull \hbox (badness 10000) in paragraph at lines 145--147
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 146--147
+Underfull \hbox (badness 10000) in paragraph at lines 148--149
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 148--151
+Underfull \hbox (badness 10000) in paragraph at lines 150--153
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 152--153
+Underfull \hbox (badness 10000) in paragraph at lines 154--155
 
  []
 
 File: Table2.PNG Graphic file (type QTm)
 <use  "Table2.PNG" >
-Overfull \hbox (25.3977pt too wide) in paragraph at lines 156--157
+Overfull \hbox (25.3977pt too wide) in paragraph at lines 158--159
 []  
  []
 
@@ -801,7 +801,7 @@ Package Fancyhdr Warning: \headheight is too small (12.0pt):
 [6]
 File: MEME.PNG Graphic file (type QTm)
  <use  "MEME.PNG" >
-Overfull \hbox (34.3451pt too wide) in paragraph at lines 165--166
+Overfull \hbox (34.3451pt too wide) in paragraph at lines 167--168
 []  
  []
 
@@ -822,13 +822,13 @@ File: AB_meme2.PNG Graphic file (type QTm)
  <use  "AB_meme2.PNG" >
 File: MAST.PNG Graphic file (type QTm)
  <use  "MAST.PNG" >
-Overfull \hbox (34.3451pt too wide) in paragraph at lines 183--184
+Overfull \hbox (34.3451pt too wide) in paragraph at lines 185--186
 []  
  []
 
 File: FIMO.PNG Graphic file (type QTm)
 <use  "FIMO.PNG" >
-Overfull \hbox (32.8451pt too wide) in paragraph at lines 188--189
+Overfull \hbox (32.8451pt too wide) in paragraph at lines 190--191
 []  
  []
 
@@ -848,7 +848,7 @@ Package Fancyhdr Warning: \headheight is too small (12.0pt):
 [9]
 File: tomtom.PNG Graphic file (type QTm)
  <use  "tomtom.PNG" >
-Overfull \hbox (28.34511pt too wide) in paragraph at lines 218--219
+Overfull \hbox (28.34511pt too wide) in paragraph at lines 220--221
 []  
  []
 
@@ -866,7 +866,7 @@ Package Fancyhdr Warning: \headheight is too small (12.0pt):
  This may cause the page layout to be inconsistent, however.
 
 [11]
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 284.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 286.
 
 
 Package Fancyhdr Warning: \headheight is too small (12.0pt): 
@@ -875,11 +875,11 @@ Package Fancyhdr Warning: \headheight is too small (12.0pt):
  This may cause the page layout to be inconsistent, however.
 
 [12]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 284.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 286.
  (mid.aux)
-Package atveryend Info: Empty hook `AtVeryEndDocument' on input line 284.
-Package atveryend Info: Empty hook `AtEndAfterFileList' on input line 284.
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 284.
+Package atveryend Info: Empty hook `AtVeryEndDocument' on input line 286.
+Package atveryend Info: Empty hook `AtEndAfterFileList' on input line 286.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 286.
  ) 
 Here is how much of TeX's memory you used:
  13898 strings out of 427899
