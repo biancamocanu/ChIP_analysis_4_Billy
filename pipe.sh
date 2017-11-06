@@ -179,7 +179,7 @@ for file in $fastqfiles
 		
 		if [ $prefix != "Input" ]
 		then
-				macs14 -t ${outPATH}${prefix}/${prefix}_chr12.sorted.bam -c ${outPATH}Input/Input_chr12.sorted.bam -f BAM -n ${prefix} -g 133851895
+				macs14 -t ${outPATH}${prefix}/${prefix}_chr12.sorted.bam -c ${outPATH}Input/Input_chr12.sorted.bam -f BAM -n ${prefix} -g 133851895 2>&1
 				Rscript ${prefix}_model.r
 				peakshift=`grep "legend" ${prefix}_model.r | tail -n 1 | cut -d "=" -f2 | cut -d "\"" -f1`
 
@@ -212,16 +212,16 @@ for file in $fastqfiles
 				if [ -s ${sample}_rep1_peaks_shifted.bed ] && [ -s ${sample}_rep2_peaks_shifted.bed ]
 				then
 					echo "Finding high confidence peaks between replicates"
-					bedtools intersect -a ${sample}_rep1_peaks_shifted.bed -b ${sample}_rep2_peaks_shifted.bed > ${sample}_peaks_highconf.bed
+					bedtools intersect -a ${sample}_rep1_peaks_shifted.bed -b ${sample}_rep2_peaks_shifted.bed > ${sample}_peaks_highconf.bed 2>&1
 
 # the next statement is a bit iffy because it needs the other sample high confidence peaks bed file, and it depends on the order the files are processed, but works
 
 					if [ $sample=="treatA_chip" ] && [ -s treatAB_chip_peaks_highconf.bed ]
 					then
-						bedtools intersect -v -a ${sample}_peaks_highconf.bed -b treatAB_chip_peaks_highconf.bed > ${sample}_only_peaks.bed
+						bedtools intersect -v -a ${sample}_peaks_highconf.bed -b treatAB_chip_peaks_highconf.bed > ${sample}_only_peaks.bed 2>&1
 					elif [ $sample=="treatAB_chip"] && [ -s treatA_chip_peaks_highconf.bed ]
 					then
-						bedtools intersect -v -a ${sample}_peaks_highconf.bed -b treatA_chip_peaks_highconf.bed > ${sample}_only_peaks.bed
+						bedtools intersect -v -a ${sample}_peaks_highconf.bed -b treatA_chip_peaks_highconf.bed > ${sample}_only_peaks.bed 2>&1
 					fi
 				fi
 		fi
@@ -255,7 +255,7 @@ printf ("%s\t%s\t%s\t%s\t%s\t%s\n", $1, $2 - 500, $2 + 500, $4, $5, $6);
 else if($6=="-" && $2<$3)
 printf ("%s\t%s\t%s\t%s\t%s\t%s\n", $1, $3 - 500, $3 + 500, $4, $5, $6)
 }' gencode_ENSG_geneID_chr12.txt > gencode_ENSG_geneID_chr12_TSS.bed
-bedtools getfasta -name -fi $hg19 -bed gencode_ENSG_geneID_chr12_TSS.bed -fo gencode_ENSG_geneID_chr12_TSS.fasta
+bedtools getfasta -name -fi $hg19 -bed gencode_ENSG_geneID_chr12_TSS.bed -fo gencode_ENSG_geneID_chr12_TSS.fasta 2>&1
 
 # Retrieving genes - if the gene is on the + strand, gene region starts at $2 + 501 and ends at the $3 + 1000
 # if the gene is on the - strand, the gene ends at $2 - 1000, starts at $3 - 501
@@ -267,7 +267,7 @@ printf ("%s\t%s\t%s\t%s\t%s\t%s\n", $1, $2 + 501, $3 + 1000, $4, $5, $6);
 else if($6=="-" && $2<$3)
 printf ("%s\t%s\t%s\t%s\t%s\t%s\n", $1, $2 - 1000, $3 - 501, $4, $5, $6)
 }' gencode_ENSG_geneID_chr12.txt > gencode_ENSG_geneID_chr12_genes.bed
-bedtools getfasta -name -fi $hg19 -bed gencode_ENSG_geneID_chr12_genes.bed -fo gencode_ENSG_geneID_chr12_genes.fasta
+bedtools getfasta -name -fi $hg19 -bed gencode_ENSG_geneID_chr12_genes.bed -fo gencode_ENSG_geneID_chr12_genes.fasta 2>&1
 
 
 # Intergenic regions - basically if it's not part of the first two - intersect with chromosome 12 file and take the complement
@@ -281,10 +281,10 @@ cat ./gencode_ENSG_geneID_chr12_TSS.bed >> gencode_ENSG_geneID_chr12_genesandTSS
 cat ./gencode_ENSG_geneID_chr12_genes.bed >> gencode_ENSG_geneID_chr12_genesandTSS.bed
 
 # intersecting the file with chromosome 12
-bedtools sort -i gencode_ENSG_geneID_chr12_genesandTSS.bed > gencode_ENSG_geneID_chr12_genesandTSS.sorted.bed
-bedtools complement -i gencode_ENSG_geneID_chr12_genesandTSS.sorted.bed -g chr12Info.txt > gencode_ENSG_geneID_chr12_IGS.bed
+bedtools sort -i gencode_ENSG_geneID_chr12_genesandTSS.bed > gencode_ENSG_geneID_chr12_genesandTSS.sorted.bed 2>&1
+bedtools complement -i gencode_ENSG_geneID_chr12_genesandTSS.sorted.bed -g chr12Info.txt > gencode_ENSG_geneID_chr12_IGS.bed 2>&1
 rm gencode_ENSG_geneID_chr12_genesandTSS.*
-bedtools getfasta -name -fi $hg19 -bed gencode_ENSG_geneID_chr12_IGS.bed -fo gencode_ENSG_geneID_chr12_IGS.fasta
+bedtools getfasta -name -fi $hg19 -bed gencode_ENSG_geneID_chr12_IGS.bed -fo gencode_ENSG_geneID_chr12_IGS.fasta 2>&1
 
 
 #==============================================================================================================================================================
@@ -303,9 +303,9 @@ for file in $summits_highconf
 		echo "Examining distribution in TSS, IGS, genes..."
 		if [ $ext=="bed" ]
 			then
-			bedtools coverage -a ${prefix}_chr12.bed -b gencode_ENSG_geneID_chr12_TSS.bed  > ${prefix}_chr12_inTSS.bed
-			bedtools coverage -a ${prefix}_chr12.bed -b gencode_ENSG_geneID_chr12_IGS.bed > ${prefix}_chr12_inIGS.bed
-			bedtools coverage -a ${prefix}_chr12.bed -b gencode_ENSG_geneID_chr12_genes.bed > ${prefix}_chr12_ingenes.bed
+			bedtools coverage -a ${prefix}_chr12.bed -b gencode_ENSG_geneID_chr12_TSS.bed  > ${prefix}_chr12_inTSS.bed 2>&1
+			bedtools coverage -a ${prefix}_chr12.bed -b gencode_ENSG_geneID_chr12_IGS.bed > ${prefix}_chr12_inIGS.bed 2>&1
+			bedtools coverage -a ${prefix}_chr12.bed -b gencode_ENSG_geneID_chr12_genes.bed > ${prefix}_chr12_ingenes.bed 2>&1
 
 			awk '{if($9!="0.0000000")
 			print $0}' ${prefix}_chr12_inTSS.bed > ${prefix}_chr12_inTSS_nozero.bed
@@ -320,16 +320,16 @@ for file in $summits_highconf
 
 		echo "Retrieving top 200 peaks from the entire genome"
 		sort -k5nr $file | head -n 200 > ${prefix}_top200.bed
-		bedtools slop -i ${prefix}_top200.bed -g $hg19chromInfo -b 50 > ${prefix}_top200_100bp.bed
-		bedtools getfasta -name -fi $hg19 -bed ${prefix}_top200_100bp.bed -fo ${prefix}_top200_100bp.fasta
+		bedtools slop -i ${prefix}_top200.bed -g $hg19chromInfo -b 50 > ${prefix}_top200_100bp.bed 2>&1
+		bedtools getfasta -name -fi $hg19 -bed ${prefix}_top200_100bp.bed -fo ${prefix}_top200_100bp.fasta 2>&1
 
 		echo "Finding motifs with MEME for $prefix"
 
 		if [ ${prefix}=="treatA_summits" ]
 			then
-			meme ${prefix}_top200_100bp.fasta -oc ${prefix}_meme_OUT_FOLDER -bfile $TSSbackground -dna -nmotifs 2 -minw 10 -maxw 18 -revcomp -mod anr
+			meme ${prefix}_top200_100bp.fasta -oc ${prefix}_meme_OUT_FOLDER -bfile $TSSbackground -dna -nmotifs 2 -minw 10 -maxw 18 -revcomp -mod anr 2>&1
 			else
-			meme ${prefix}_top200_100bp.fasta -oc ${prefix}_meme_OUT_FOLDER -bfile $TSSbackground -dna -nmotifs 2 -minw 12 -maxw 14 -revcomp -mod anr
+			meme ${prefix}_top200_100bp.fasta -oc ${prefix}_meme_OUT_FOLDER -bfile $TSSbackground -dna -nmotifs 2 -minw 12 -maxw 14 -revcomp -mod anr 2>&1
 		fi
 #==============================================================================================================================================================
 # This part generates fasta sequences for the chromosome 12 TSS, genes and IGS and returns how many of each display the motifs identified with MEME
@@ -340,38 +340,38 @@ for file in $summits_highconf
 
 		echo "Examining the motif occurrence within chromosome 12 IGS/TSS/genes summits"
 		echo "Generating fasta files for each region"
-		bedtools slop -i ${prefix}_chr12_inIGS_nozero.bed -g chr12Info.txt -b 50 > ${prefix}_chr12_inIGS_100bp.bed
-		bedtools slop -i ${prefix}_chr12_inTSS_nozero.bed -g chr12Info.txt -b 50 > ${prefix}_chr12_inTSS_100bp.bed
-		bedtools slop -i ${prefix}_chr12_ingenes_nozero.bed -g chr12Info.txt -b 50 > ${prefix}_chr12_ingenes_100bp.bed
+		bedtools slop -i ${prefix}_chr12_inIGS_nozero.bed -g chr12Info.txt -b 50 > ${prefix}_chr12_inIGS_100bp.bed 2>&1
+		bedtools slop -i ${prefix}_chr12_inTSS_nozero.bed -g chr12Info.txt -b 50 > ${prefix}_chr12_inTSS_100bp.bed 2>&1
+		bedtools slop -i ${prefix}_chr12_ingenes_nozero.bed -g chr12Info.txt -b 50 > ${prefix}_chr12_ingenes_100bp.bed 2>&1
 
-		bedtools getfasta -name -fi $hg19 -bed ${prefix}_chr12_inIGS_100bp.bed -fo ${prefix}_chr12_inIGS_100bp.fasta
-		bedtools getfasta -name -fi $hg19 -bed ${prefix}_chr12_inTSS_100bp.bed -fo ${prefix}_chr12_inTSS_100bp.fasta
-		bedtools getfasta -name -fi $hg19 -bed ${prefix}_chr12_ingenes_100bp.bed -fo ${prefix}_chr12_ingenes_100bp.fasta
+		bedtools getfasta -name -fi $hg19 -bed ${prefix}_chr12_inIGS_100bp.bed -fo ${prefix}_chr12_inIGS_100bp.fasta 2>&1
+		bedtools getfasta -name -fi $hg19 -bed ${prefix}_chr12_inTSS_100bp.bed -fo ${prefix}_chr12_inTSS_100bp.fasta 2>&1
+		bedtools getfasta -name -fi $hg19 -bed ${prefix}_chr12_ingenes_100bp.bed -fo ${prefix}_chr12_ingenes_100bp.fasta 2>&1
 
 #MAST syntax for each file:
 		echo "Searching for MEME motifs in chromosome 12 peaks"
-		mast ${prefix}_meme_OUT_FOLDER/meme.txt ${prefix}_chr12_inIGS_100bp.fasta -oc ${prefix}_IGS_mast_OUT_FOLDER
-		mast ${prefix}_meme_OUT_FOLDER/meme.txt -hit_list ${prefix}_chr12_inIGS_100bp.fasta -oc ${prefix}_IGS_mast_OUT_FOLDER > ${prefix}_IGS_mast_OUT_FOLDER/list_mast_hits.txt
+		mast ${prefix}_meme_OUT_FOLDER/meme.txt ${prefix}_chr12_inIGS_100bp.fasta -oc ${prefix}_IGS_mast_OUT_FOLDER 2>&1
+		mast ${prefix}_meme_OUT_FOLDER/meme.txt -hit_list ${prefix}_chr12_inIGS_100bp.fasta -oc ${prefix}_IGS_mast_OUT_FOLDER > ${prefix}_IGS_mast_OUT_FOLDER/list_mast_hits.txt 2>&1
 
-		mast ${prefix}_meme_OUT_FOLDER/meme.txt ${prefix}_chr12_inTSS_100bp.fasta -oc ${prefix}_TSS_mast_OUT_FOLDER
-		mast ${prefix}_meme_OUT_FOLDER/meme.txt -hit_list ${prefix}_chr12_inTSS_100bp.fasta -oc ${prefix}_TSS_mast_OUT_FOLDER > ${prefix}_TSS_mast_OUT_FOLDER/list_mast_hits.txt
+		mast ${prefix}_meme_OUT_FOLDER/meme.txt ${prefix}_chr12_inTSS_100bp.fasta -oc ${prefix}_TSS_mast_OUT_FOLDER 2>&1
+		mast ${prefix}_meme_OUT_FOLDER/meme.txt -hit_list ${prefix}_chr12_inTSS_100bp.fasta -oc ${prefix}_TSS_mast_OUT_FOLDER > ${prefix}_TSS_mast_OUT_FOLDER/list_mast_hits.txt 2>&1
 
-		mast ${prefix}_meme_OUT_FOLDER/meme.txt ${prefix}_chr12_ingenes_100bp.fasta -oc ${prefix}_genes_mast_OUT_FOLDER
-		mast ${prefix}_meme_OUT_FOLDER/meme.txt -hit_list ${prefix}_chr12_ingenes_100bp.fasta -oc ${prefix}_genes_mast_OUT_FOLDER > ${prefix}_genes_mast_OUT_FOLDER/list_mast_hits.txt
+		mast ${prefix}_meme_OUT_FOLDER/meme.txt ${prefix}_chr12_ingenes_100bp.fasta -oc ${prefix}_genes_mast_OUT_FOLDER 2>&1
+		mast ${prefix}_meme_OUT_FOLDER/meme.txt -hit_list ${prefix}_chr12_ingenes_100bp.fasta -oc ${prefix}_genes_mast_OUT_FOLDER > ${prefix}_genes_mast_OUT_FOLDER/list_mast_hits.txt 2>&1
 
 #FIMO
 
 		echo "Generating chromosome 12 background file for FIMO"
-		fasta-get-markov $chr12 > chr12_bkgrnd.txt
+		fasta-get-markov $chr12 > chr12_bkgrnd.txt 2>&1
 
 		echo "Using FIMO on Chromosome 12 (whole)"
-		fimo --oc ${prefix}_Chr12_all_fimo_OUT_FOLDER --bgfile chr12_bkgrnd.txt ${prefix}_meme_OUT_FOLDER/meme.txt $chr12
+		fimo --oc ${prefix}_Chr12_all_fimo_OUT_FOLDER --bgfile chr12_bkgrnd.txt ${prefix}_meme_OUT_FOLDER/meme.txt $chr12 2>&1
 		echo "Using FIMO on Chromosome 12 IGS sequences"
-		fimo --oc ${prefix}_IGS_fimo_OUT_FOLDER --bgfile chr12_bkgrnd.txt ${prefix}_meme_OUT_FOLDER/meme.txt gencode_ENSG_geneID_chr12_IGS.fasta
+		fimo --oc ${prefix}_IGS_fimo_OUT_FOLDER --bgfile chr12_bkgrnd.txt ${prefix}_meme_OUT_FOLDER/meme.txt gencode_ENSG_geneID_chr12_IGS.fasta 2>&1
 		echo "Using FIMO on Chromosome 12 TSS sequences"
-		fimo --oc ${prefix}_TSS_fimo_OUT_FOLDER --bgfile chr12_bkgrnd.txt ${prefix}_meme_OUT_FOLDER/meme.txt gencode_ENSG_geneID_chr12_TSS.fasta
+		fimo --oc ${prefix}_TSS_fimo_OUT_FOLDER --bgfile chr12_bkgrnd.txt ${prefix}_meme_OUT_FOLDER/meme.txt gencode_ENSG_geneID_chr12_TSS.fasta 2>&1
 		echo "Using FIMO on Chromsome 12 gene encoding sequences"
-		fimo --oc ${prefix}_genes_fimo_OUT_FOLDER --bgfile chr12_bkgrnd.txt ${prefix}_meme_OUT_FOLDER/meme.txt gencode_ENSG_geneID_chr12_genes.fasta
+		fimo --oc ${prefix}_genes_fimo_OUT_FOLDER --bgfile chr12_bkgrnd.txt ${prefix}_meme_OUT_FOLDER/meme.txt gencode_ENSG_geneID_chr12_genes.fasta 2>&1
 		echo "FIMO analysis done!"
 
 		echo "Reformatting FIMO outputs to .bed"
@@ -389,7 +389,7 @@ for file in $summits_highconf
 		}' ${prefix}_genes_fimo_OUT_FOLDER/fimo.txt > ${prefix}_genes_fimo_OUT_FOLDER/fimo_genes.bed
 
 		echo "Looking in JASPAR MEME databases (tomtom)"
-		tomtom -eps -m 1 -o ${prefix}_tomtom_OUT ${prefix}_meme_OUT_FOLDER/meme.txt $jaspar_meme
+		tomtom -eps -m 1 -o ${prefix}_tomtom_OUT ${prefix}_meme_OUT_FOLDER/meme.txt $jaspar_meme 2>&1
 
 
 	done | tee -a ${outPATH}logfiles/log_geneLists.txt
